@@ -2159,6 +2159,22 @@ def apply_remediation_changes(
                 1,
             )
 
+            # Reject AI patches that would leave a Python file
+            # uncompilable, before anything is written to disk.
+            if target.endswith(".py"):
+                try:
+                    compile(updated, target, "exec")
+                except SyntaxError as syntax_error:
+                    rejected.append({
+                        "file": relative_file,
+                        "reason": (
+                            "Patch rejected: it would introduce a "
+                            f"syntax error ({syntax_error.msg}, "
+                            f"line {syntax_error.lineno})."
+                        ),
+                    })
+                    continue
+
             with open(
                 target,
                 "w",
