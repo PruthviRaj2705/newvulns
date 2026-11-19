@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vulnerable Lab: scanner test target</title>
+<style>
+  :root {
+    --ink: #17202b;
+    --slate: #5b6776;
+    --mist: #eceff3;
+    --panel: #ffffff;
+    --line: #cfd6df;
+    --warn: #b42318;
+    --warn-bg: #fdecea;
+    --action: #0b6e6e;
+    --action-hover: #095858;
+    --code-bg: #101820;
+    --code-ink: #d7e3ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--mist);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .banner {
+    background: var(--warn-bg);
+    border-bottom: 2px solid var(--warn);
+    color: var(--warn);
+    padding: 12px 24px;
+    font-weight: 600;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lede { max-width: 62ch; color: var(--slate); margin: 0 0 32px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: 4px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .panel h2 { font-size: 1.05rem; margin: 0; }
+  .cwe { font-size: 0.85rem; color: var(--warn); margin: 0; }
+  .hint { font-size: 0.9rem; color: var(--slate); margin: 0; }
+  label { font-size: 0.9rem; font-weight: 600; }
+  input, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font: inherit;
+    background: #fbfcfd;
+  }
+  textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; min-height: 72px; }
+  button {
+    align-self: flex-start;
+    background: var(--action);
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    padding: 9px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--action-hover); }
+  :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+  .out {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 4px;
+    padding: 10px 12px;
+    min-height: 56px;
+    max-height: 220px;
+    overflow: auto;
+    font: 0.85rem/1.45 ui-monospace, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .out h4 { margin: 0 0 6px; color: #fff; }
+  .out ul { margin: 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+<div class="banner" role="alert">
+  Intentionally vulnerable. Run on localhost only and never deploy this app.
+</div>
+
+<main>
+  <h1>Vulnerable Lab</h1>
+  <p class="lede">
+    A test target for the shift-left pipeline. Each panel exercises one weakness
+    that SonarQube, Trivy, or the AI remediation step should find and fix.
+  </p>
+
+  <div class="grid">
+
+    <section class="panel">
+      <h2>Login</h2>
+      <p class="cwe">SQL injection (CWE-89), MD5 hashing (CWE-328)</p>
+      <p class="hint">Try the username <code>admin' --</code> with any password.</p>
+      <label for="login-user">Username</label>
+      <input id="login-user" value="guest" autocomplete="off">
+      <label for="login-pass">Password</label>
+      <input id="login-pass" value="guest" autocomplete="off">
+      <button id="login-run">Run login</button>
+      <pre class="out" id="login-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Product search</h2>
+      <p class="cwe">Reflected XSS (CWE-79), SQL injection (CWE-89)</p>
+      <p class="hint">The result is written into the page as HTML.</p>
+      <label for="search-q">Search term</label>
+      <input id="search-q" value="lamp" autocomplete="off">
+      <button id="search-run">Run search</button>
+      <div class="out" id="search-out" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ping a host</h2>
+      <p class="cwe">OS command injection (CWE-78)</p>
+      <p class="hint">Input goes straight to a shell command.</p>
+      <label for="ping-host">Host</label>
+      <input id="ping-host" value="127.0.0.1" autocomplete="off">
+      <button id="ping-run">Run ping</button>
+      <pre class="out" id="ping-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Read a file</h2>
+      <p class="cwe">Path traversal (CWE-22)</p>
+      <p class="hint">Meant to read from <code>./files</code> only.</p>
+      <label for="file-name">File name</label>
+      <input id="file-name" value="notes.txt" autocomplete="off">
+      <button id="file-run">Read file</button>
+      <pre class="out" id="file-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Calculator</h2>
+      <p class="cwe">Code injection via eval (CWE-95)</p>
+      <p class="hint">The expression is evaluated by Python.</p>
+      <label for="calc-expr">Expression</label>
+      <input id="calc-expr" value="2 + 2" autocomplete="off">
+      <button id="calc-run">Calculate</button>
+      <pre class="out" id="calc-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Load YAML config</h2>
+      <p class="cwe">Unsafe deserialization (CWE-502)</p>
+      <p class="hint">Parsed with the full YAML loader.</p>
+      <label for="yaml-body">YAML</label>
+      <textarea id="yaml-body">name: demo
+debug: true</textarea>
+      <button id="yaml-run">Load config</button>
+      <pre class="out" id="yaml-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Restore session</h2>
+      <p class="cwe">Pickle deserialization (CWE-502)</p>
+      <p class="hint">Takes a base64 blob and unpickles it.</p>
+      <label for="session-blob">Base64 blob</label>
+      <input id="session-blob" value="gAN9cQBYBAAAAHVzZXJxAVgFAAAAZ3Vlc3RxAnMu" autocomplete="off">
+      <button id="session-run">Restore session</button>
+      <pre class="out" id="session-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Fetch a URL</h2>
+      <p class="cwe">SSRF (CWE-918), TLS verification off (CWE-295)</p>
+      <p class="hint">The server requests any URL you give it.</p>
+      <label for="fetch-url">URL</label>
+      <input id="fetch-url" value="http://127.0.0.1:5001/" autocomplete="off">
+      <button id="fetch-run">Fetch URL</button>
+      <pre class="out" id="fetch-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Reset token</h2>
+      <p class="cwe">Weak randomness (CWE-338)</p>
+      <p class="hint">Six digits from a non-cryptographic generator.</p>
+      <button id="token-run">Get token</button>
+      <pre class="out" id="token-out" aria-live="polite"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Redirect</h2>
+      <p class="cwe">Open redirect (CWE-601)</p>
+      <p class="hint">Follows any <code>next</code> value without checking it.</p>
+      <label for="redirect-next">Next URL</label>
+      <input id="redirect-next" value="/" autocomplete="off">
+      <button id="redirect-run">Follow redirect</button>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const show = (id, data) => {
+    $(id).textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+  };
+  const call = async (id, url, options) => {
+    try {
+      const response = await fetch(url, options);
+      const text = await response.text();
+      try { show(id, JSON.parse(text)); } catch { show(id, text); }
+    } catch (error) {
+      show(id, "Request failed: " + error.message);
+    }
+  };
+  const post = (body, json = true) => ({
+    method: "POST",
+    headers: { "Content-Type": json ? "application/json" : "text/plain" },
+    body: json ? JSON.stringify(body) : body,
+  });
+
+  $("login-run").onclick = () =>
+    call("login-out", "/api/login", post({
+      username: $("login-user").value,
+      password: $("login-pass").value,
+    }));
+
+  // Unsafe on purpose: server HTML is injected without sanitizing.
+  $("search-run").onclick = async () => {
+    const response = await fetch("/api/search?q=" + $("search-q").value);
+    $("search-out").innerHTML = await response.text();
+  };
+
+  $("ping-run").onclick = () =>
+    call("ping-out", "/api/ping?host=" + $("ping-host").value);
+  $("file-run").onclick = () =>
+    call("file-out", "/api/file?name=" + encodeURIComponent($("file-name").value));
+  $("calc-run").onclick = () =>
+    call("calc-out", "/api/calc", post({ expr: $("calc-expr").value }));
+  $("yaml-run").onclick = () =>
+    call("yaml-out", "/api/config", post($("yaml-body").value, false));
+  $("session-run").onclick = () =>
+    call("session-out", "/api/session", post({ blob: $("session-blob").value }));
+  $("fetch-run").onclick = () =>
+    call("fetch-out", "/api/fetch?url=" + encodeURIComponent($("fetch-url").value));
+  $("token-run").onclick = () => call("token-out", "/api/reset-token");
+  $("redirect-run").onclick = () => {
+    window.location = "/api/redirect?next=" + $("redirect-next").value;
+  };
+</script>
+</body>
+</html>
